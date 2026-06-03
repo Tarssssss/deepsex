@@ -1,0 +1,20 @@
+# Render blueprint. In Render: New → Blueprint → pick this repo.
+# Then set DEEPSEEK_API_KEY in the dashboard (it is sync:false = not in git).
+services:
+  - type: web
+    name: deepsex
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free # free web services spin down when idle; upgrade for always-on
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: AGENT_WORKSPACE
+        value: /app/workspace
+      # - key: DEEPSEEK_DEFAULT_MODEL
+      #   value: deepseek-chat
+    # Persist the agent's workspace across deploys (optional; paid plans):
+    # disk:
+    #   name: workspace
+    #   mountPath: /app/workspace
+    #   sizeGB: 1
