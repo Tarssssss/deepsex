@@ -241,7 +241,7 @@ export function ToolCallCard({
       {showApproval && (
         <div className="flex flex-col gap-2 border-t border-border bg-surface-2 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted">
-            DeepSeek Codex wants to {approvalVerb(tool)}. Allow?
+            DeepSex wants to {approvalVerb(tool)}. Allow?
           </p>
           <div className="flex shrink-0 items-center gap-2">
             <button

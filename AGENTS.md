@@ -1,4 +1,4 @@
-# DeepSeek Codex — agent context
+# DeepSex — agent context
 
 A Codex-style AI coding agent web app, powered by the **DeepSeek API** and branded
 in DeepSeek's design language (brand blue `#4D6BFE`, light + dark themes). It reads,

@@ -1,5 +1,5 @@
 /**
- * Shared contracts for DeepSeek Codex.
+ * Shared contracts for DeepSex.
  *
  * These types are the single source of truth shared between the server
  * (agent loop + tools) and the client (chat UI + agent orchestration hook).

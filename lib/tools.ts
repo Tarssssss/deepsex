@@ -1,5 +1,5 @@
 /**
- * Tool registry for the DeepSeek Codex agent.
+ * Tool registry for the DeepSex agent.
  *
  * Exposes the OpenAI function-tool schemas advertised to the model, plus
  * executeTool() which actually runs each tool against the sandboxed workspace.

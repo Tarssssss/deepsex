@@ -12,7 +12,7 @@ export function ThinkingIndicator({ label }: { label?: string }) {
       <span className="ds-shimmer inline-flex h-6 w-6 items-center justify-center">
         <DeepSeekLogo size={20} />
       </span>
-      <span>{label ?? "DeepSeek is thinking"}</span>
+      <span>{label ?? "DeepSex is thinking"}</span>
       <span className="inline-flex items-center gap-1" aria-hidden>
         <Dot delay="0ms" />
         <Dot delay="160ms" />

@@ -19,7 +19,7 @@ export function DeepSeekLogo({ size = 24, className }: DeepSeekLogoProps) {
       viewBox="0 0 48 48"
       fill="none"
       role="img"
-      aria-label="DeepSeek"
+      aria-label="DeepSex"
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -55,9 +55,9 @@ export function DeepSeekWordmark({ className }: DeepSeekWordmarkProps) {
       className={`inline-flex items-center gap-2 ${className ?? ""}`.trim()}
     >
       <DeepSeekLogo size={26} />
-      <span className="flex items-center gap-1.5 text-[15px] leading-none tracking-tight">
-        <span className="font-semibold text-brand">DeepSeek</span>
-        <span className="font-semibold text-text">Codex</span>
+      <span className="flex items-center text-[15px] leading-none tracking-tight">
+        <span className="font-semibold text-brand">Deep</span>
+        <span className="font-semibold text-text">Sex</span>
       </span>
     </span>
   );

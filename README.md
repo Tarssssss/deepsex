@@ -1,4 +1,4 @@
-# DeepSeek Codex
+# DeepSex
 
 A Codex-style AI coding agent, powered by the **DeepSeek** API and dressed in
 DeepSeek's design language (brand blue `#4D6BFE`, light + dark themes).
@@ -6,7 +6,7 @@ DeepSeek's design language (brand blue `#4D6BFE`, light + dark themes).
 It reads, writes, edits, and runs code inside a sandboxed workspace — driven by a
 streaming agent loop with tool calling, just like Codex.
 
-![DeepSeek Codex](public/window.svg)
+![DeepSex](public/window.svg)
 
 ## Features
 

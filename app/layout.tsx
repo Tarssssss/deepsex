@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DeepSeek Codex",
+  title: "DeepSex",
   description:
-    "A DeepSeek-powered coding agent — reads, edits, and runs code in a sandbox.",
+    "A DeepSex coding agent, powered by the DeepSeek API — reads, edits, and runs code in a sandbox.",
 };
 
 // Set the theme before first paint to avoid a flash of the wrong theme.

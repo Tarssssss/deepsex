@@ -49,7 +49,7 @@ export function EmptyState({ onPick }: { onPick: (prompt: string) => void }) {
       <DeepSeekLogo size={48} />
 
       <h1 className="mt-5 text-2xl font-semibold tracking-tight text-text">
-        DeepSeek Codex
+        DeepSex
       </h1>
       <p className="mt-2 max-w-md text-[0.9375rem] text-muted">
         Your AI coding agent — reads, edits, and runs code in a sandbox.

@@ -80,7 +80,7 @@ export function Composer({
           disabled={disabled}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask DeepSeek Codex to build, edit, or run something…"
+          placeholder="Ask DeepSex to build, edit, or run something…"
           className="ds-focus max-h-60 min-h-[1.5rem] flex-1 resize-none self-center bg-transparent py-1.5 text-[0.9375rem] leading-relaxed text-text placeholder:text-faint focus:outline-none disabled:opacity-60"
         />
 
