@@ -5,10 +5,18 @@
  * route handler can re-emit them as NDJSON. Handles the SSE wire format,
  * separate reasoning_content channel, and fragmented tool_calls accumulation.
  */
-import type { ChatMessage, StreamEvent, ToolCall } from "@/lib/types";
+import type {
+  ChatMessage,
+  ReasoningEffort,
+  StreamEvent,
+  ToolCall,
+  TokenUsage,
+} from "@/lib/types";
 
 const DEFAULT_BASE_URL = "https://api.deepseek.com";
 const DEFAULT_MODEL = "deepseek-chat";
+/** Recommended temperature for coding/math per DeepSeek docs. */
+const CODING_TEMPERATURE = 0;
 
 export interface StreamDeepSeekOptions {
   messages: ChatMessage[];
@@ -16,6 +24,14 @@ export interface StreamDeepSeekOptions {
   model?: string;
   /** OpenAI function-tool definitions (see TOOL_SCHEMAS). */
   tools?: unknown[];
+  /**
+   * Reasoning effort. Forwarded as `reasoning_effort` for the reasoner model
+   * (DeepSeek maps low/medium → high, high default, max). Ignored otherwise —
+   * non-reasoning models get effort guidance via the system prompt instead.
+   */
+  reasoningEffort?: ReasoningEffort;
+  /** Whether this model streams a separate reasoning_content channel. */
+  reasoning?: boolean;
   /** Optional abort signal to cancel the upstream request. */
   signal?: AbortSignal;
 }
@@ -60,11 +76,23 @@ export async function* streamDeepSeek(
     model,
     messages: opts.messages,
     stream: true,
+    // Ask for a final usage chunk so we can track tokens + cache hit rate.
+    stream_options: { include_usage: true },
   };
+  // Deterministic coding output. (Ignored by DeepSeek in thinking mode, which
+  // is fine — it simply has no effect for the reasoner.)
+  body.temperature = CODING_TEMPERATURE;
+  // The reasoner model honors reasoning_effort; map our 4 levels onto DeepSeek's
+  // supported values (it coerces low/medium → high internally).
+  if (opts.reasoning && opts.reasoningEffort) {
+    body.reasoning_effort = opts.reasoningEffort;
+  }
   // Only advertise tools when we actually have some; otherwise tool_choice is moot.
   if (opts.tools && opts.tools.length > 0) {
     body.tools = opts.tools;
     body.tool_choice = "auto";
+    // Allow the model to batch independent tool calls in one turn (lower latency).
+    body.parallel_tool_calls = true;
   }
 
   let res: Response;
@@ -106,6 +134,8 @@ export async function* streamDeepSeek(
   const toolCalls = new Map<number, PartialToolCall>();
   let finishReason: string | null = null;
   let emittedToolCalls = false;
+  // Usage arrives in a final chunk (empty choices) when include_usage is set.
+  let usage: TokenUsage | null = null;
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -137,6 +167,19 @@ export async function* streamDeepSeek(
         } catch {
           // Skip malformed/keep-alive fragments rather than aborting the stream.
           continue;
+        }
+
+        // The final usage chunk has an empty `choices` array + a `usage` field.
+        if (chunk.usage) {
+          const u = chunk.usage;
+          usage = {
+            prompt_tokens: u.prompt_tokens ?? 0,
+            completion_tokens: u.completion_tokens ?? 0,
+            total_tokens: u.total_tokens ?? 0,
+            prompt_cache_hit_tokens: u.prompt_cache_hit_tokens,
+            prompt_cache_miss_tokens: u.prompt_cache_miss_tokens,
+            reasoning_tokens: u.completion_tokens_details?.reasoning_tokens,
+          };
         }
 
         const choice = chunk.choices?.[0];
@@ -193,6 +236,11 @@ export async function* streamDeepSeek(
     emittedToolCalls = true;
   }
 
+  // Surface usage (tokens + cache hit/miss) before closing the turn.
+  if (usage) {
+    yield { type: "usage", usage };
+  }
+
   // Normalize finish reason: if the model called tools, report "tool_calls".
   if (!finishReason && emittedToolCalls) {
     finishReason = "tool_calls";
@@ -210,6 +258,16 @@ function errMessage(err: unknown): string {
 
 interface DeepSeekChunk {
   choices?: DeepSeekChoice[];
+  usage?: DeepSeekUsage;
+}
+
+interface DeepSeekUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  prompt_cache_hit_tokens?: number;
+  prompt_cache_miss_tokens?: number;
+  completion_tokens_details?: { reasoning_tokens?: number };
 }
 
 interface DeepSeekChoice {

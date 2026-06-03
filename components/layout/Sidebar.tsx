@@ -2,7 +2,8 @@
 
 import { RefreshCw } from "lucide-react";
 import { FileTree } from "@/components/files/FileTree";
-import type { FileNode } from "@/lib/types";
+import { SessionList } from "@/components/sessions/SessionList";
+import type { FileNode, SessionMeta } from "@/lib/types";
 
 interface SidebarProps {
   tree: FileNode[];
@@ -10,6 +11,11 @@ interface SidebarProps {
   onSelect: (p: string) => void;
   onRefresh?: () => void;
   root?: string;
+  sessions: SessionMeta[];
+  currentSessionId: string | null;
+  onSelectSession: (id: string) => void;
+  onNewSession: () => void;
+  onDeleteSession: (id: string) => void;
 }
 
 /** Basename of a path, tolerant of trailing slashes and empty input. */
@@ -25,11 +31,27 @@ export function Sidebar({
   onSelect,
   onRefresh,
   root,
+  sessions,
+  currentSessionId,
+  onSelectSession,
+  onNewSession,
+  onDeleteSession,
 }: SidebarProps) {
   const rootName = root ? basename(root) : null;
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-bg-subtle">
+      {/* Sessions */}
+      <div className="shrink-0 border-b border-border px-2 py-3">
+        <SessionList
+          sessions={sessions}
+          currentId={currentSessionId}
+          onSelect={onSelectSession}
+          onNew={onNewSession}
+          onDelete={onDeleteSession}
+        />
+      </div>
+
       <div className="shrink-0 px-3 pb-2 pt-3">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-faint">

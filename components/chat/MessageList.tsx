@@ -14,15 +14,19 @@ export function MessageList({
   messages,
   approvalMode,
   awaitingApprovalIds,
+  pendingQuestionIds,
   onApprove,
   onReject,
+  onAnswer,
   busy,
 }: {
   messages: UIMessage[];
   approvalMode: ApprovalMode;
   awaitingApprovalIds?: Set<string>;
+  pendingQuestionIds?: Set<string>;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
+  onAnswer?: (id: string, answers: Record<string, string>) => void;
   busy?: boolean;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -46,8 +50,10 @@ export function MessageList({
             message={message}
             approvalMode={approvalMode}
             awaitingApprovalIds={awaitingApprovalIds}
+            pendingQuestionIds={pendingQuestionIds}
             onApprove={onApprove}
             onReject={onReject}
+            onAnswer={onAnswer}
           />
         ))}
 

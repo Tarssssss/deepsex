@@ -6,7 +6,7 @@
  * approval, depending on the approval mode) and feeds the output back into the
  * conversation.
  */
-import type { ToolResult } from "@/lib/types";
+import type { McpServerConfig, ToolResult } from "@/lib/types";
 import { executeTool } from "@/lib/tools";
 
 export const runtime = "nodejs";
@@ -14,6 +14,8 @@ export const runtime = "nodejs";
 interface ToolRequestBody {
   name: string;
   args: Record<string, unknown>;
+  /** MCP server config (for routing mcp__ tool calls). */
+  mcpServers?: McpServerConfig[];
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -30,7 +32,9 @@ export async function POST(request: Request): Promise<Response> {
 
     const args =
       body.args && typeof body.args === "object" ? body.args : {};
-    const result = await executeTool(body.name, args);
+    const result = await executeTool(body.name, args, {
+      mcpServers: body.mcpServers,
+    });
     return Response.json(result);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

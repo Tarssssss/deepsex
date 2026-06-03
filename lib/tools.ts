@@ -11,12 +11,13 @@ import path from "node:path";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { createTwoFilesPatch } from "diff";
-import type { ToolResult } from "@/lib/types";
+import type { McpServerConfig, ToolResult } from "@/lib/types";
+import { isMcpTool } from "@/lib/types";
+import { callMcpTool } from "@/lib/mcp";
 import {
   ensureWorkspace,
   resolveInWorkspace,
   toWorkspaceRelative,
-  workspaceRoot,
   IGNORED_ENTRIES,
 } from "@/lib/workspace";
 
@@ -155,15 +156,167 @@ export const TOOL_SCHEMAS: ToolSchema[] = [
   },
 ];
 
+/**
+ * Schemas for tools the CLIENT orchestrates (planning, questions, sub-agents,
+ * skills, memory, completion). They are advertised to the model here so they
+ * appear in the stable cached tool prefix, but they are never executed on the
+ * server — `useAgent` handles them. They touch no filesystem/shell.
+ */
+export const CLIENT_TOOL_SCHEMAS: ToolSchema[] = [
+  {
+    type: "function",
+    function: {
+      name: "update_plan",
+      description:
+        "Create or update a live TODO checklist for multi-step work. Provide the full, ordered list of steps each time. Keep exactly one step 'in_progress'; mark finished steps 'completed'.",
+      parameters: {
+        type: "object",
+        properties: {
+          steps: {
+            type: "array",
+            description: "The ordered checklist.",
+            items: {
+              type: "object",
+              properties: {
+                step: { type: "string", description: "Short description of the step." },
+                status: {
+                  type: "string",
+                  enum: ["pending", "in_progress", "completed"],
+                },
+              },
+              required: ["step", "status"],
+            },
+          },
+        },
+        required: ["steps"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "ask_user",
+      description:
+        "Ask the user up to a few clarifying multiple-choice questions and pause until they answer. Use only when the task is genuinely ambiguous and the answer changes what you do.",
+      parameters: {
+        type: "object",
+        properties: {
+          questions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                question: { type: "string", description: "Full question, ends with '?'." },
+                header: { type: "string", description: "Short label (≤12 chars)." },
+                multiSelect: { type: "boolean" },
+                options: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      label: { type: "string" },
+                      description: { type: "string" },
+                    },
+                    required: ["label"],
+                  },
+                },
+              },
+              required: ["question", "header", "options"],
+            },
+          },
+        },
+        required: ["questions"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "spawn_subagent",
+      description:
+        "Delegate a self-contained sub-task to a fresh-context sub-agent. It cannot see this conversation, so inline all needed context (paths, errors, decisions) into the task. Returns only the sub-agent's final summary.",
+      parameters: {
+        type: "object",
+        properties: {
+          agent: {
+            type: "string",
+            description: "Which sub-agent profile to use (e.g. general, explorer, reviewer).",
+          },
+          task: {
+            type: "string",
+            description: "The complete, self-contained task for the sub-agent.",
+          },
+        },
+        required: ["agent", "task"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "use_skill",
+      description:
+        "Load the full instructions for one of the available skills before doing that kind of work. Returns the skill body.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "The skill name to load." },
+        },
+        required: ["name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "remember",
+      description:
+        "Save a durable fact or user preference to long-term memory that persists across sessions. Use sparingly for things worth remembering.",
+      parameters: {
+        type: "object",
+        properties: {
+          note: { type: "string", description: "The fact/preference to remember." },
+        },
+        required: ["note"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "task_complete",
+      description:
+        "Signal that the user's goal is fully achieved and verified. In goal mode this stops the autonomous loop.",
+      parameters: {
+        type: "object",
+        properties: {
+          summary: { type: "string", description: "Short summary of what was accomplished." },
+        },
+        required: ["summary"],
+      },
+    },
+  },
+];
+
 /* ------------------------------------------------------------------ */
 /* Tool dispatch                                                       */
 /* ------------------------------------------------------------------ */
 
+export interface ToolContext {
+  /** MCP servers configured by the client, for routing mcp__ tool calls. */
+  mcpServers?: McpServerConfig[];
+}
+
 export async function executeTool(
   name: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  ctx: ToolContext = {}
 ): Promise<ToolResult> {
   try {
+    // MCP tools (mcp__server__tool) route to the configured remote server.
+    if (isMcpTool(name)) {
+      return await callMcpTool(ctx.mcpServers ?? [], name, args);
+    }
     switch (name) {
       case "read_file":
         return await readFileTool(args);
