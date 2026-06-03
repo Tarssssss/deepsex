@@ -18,8 +18,10 @@ export const metadata: Metadata = {
     "A DeepSex coding agent, powered by the DeepSeek API — reads, edits, and runs code in a sandbox.",
 };
 
-// Set the theme before first paint to avoid a flash of the wrong theme.
-const themeInit = `(function(){try{var t=localStorage.getItem('ds-theme');if(!t){t='light';}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();`;
+// Set the theme before first paint to avoid a flash of the wrong theme. The
+// preference lives in the persisted settings object (ds-settings); "system"
+// resolves against prefers-color-scheme.
+const themeInit = `(function(){try{var p='system';var raw=localStorage.getItem('ds-settings');if(raw){var s=JSON.parse(raw);if(s&&s.theme){p=s.theme;}}var t=p;if(p==='system'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();`;
 
 export default function RootLayout({
   children,
