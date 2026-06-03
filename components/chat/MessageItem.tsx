@@ -15,14 +15,18 @@ export function MessageItem({
   message,
   approvalMode,
   awaitingApprovalIds,
+  pendingQuestionIds,
   onApprove,
   onReject,
+  onAnswer,
 }: {
   message: UIMessage;
   approvalMode: ApprovalMode;
   awaitingApprovalIds?: Set<string>;
+  pendingQuestionIds?: Set<string>;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
+  onAnswer?: (id: string, answers: Record<string, string>) => void;
 }) {
   if (message.role === "user") {
     return (
@@ -66,8 +70,10 @@ export function MessageItem({
                     ? awaitingApprovalIds.has(tool.id)
                     : tool.status === "pending"
                 }
+                pendingQuestion={pendingQuestionIds?.has(tool.id)}
                 onApprove={onApprove}
                 onReject={onReject}
+                onAnswer={onAnswer}
               />
             ))}
           </div>
