@@ -38,6 +38,11 @@ streaming agent loop with tool calling, just like Codex.
   (light / dark / system), all persisted in the browser.
 - **Rich tool rendering** — unified **diffs**, a **terminal** view, plan checklists,
   question cards, and nested sub-agent timelines.
+- **Open a local folder** (opencode-style) — browse the machine's directories and pick
+  any folder as the agent's workspace; all tools then read/write/run inside it.
+- **Custom agents** (ccswitch-style) — a separate `/agents` hub to configure agents with
+  their own OpenAI-compatible provider, API key, model, and system prompt, then chat with
+  each one (per-agent conversations, quick switching, test-connection).
 - **Workspace file tree** with auto-refresh on mutation, plus a syntax-highlighted **file viewer**.
 
 ## Architecture
@@ -45,15 +50,20 @@ streaming agent loop with tool calling, just like Codex.
 ```
 app/
   page.tsx            UI shell (chat + sidebar + file viewer + settings/usage)
+  agents/page.tsx     separate "Custom Agents" hub (ccswitch-style)
   api/
     chat/route.ts     POST → streams one assistant turn as NDJSON (builds prompt + tool list)
-    tool/route.ts     POST → executes a single server/MCP tool in the sandbox
+    tool/route.ts     POST → executes a single server/MCP tool in the active workspace
     mcp/route.ts      POST → discovers tools from configured MCP servers
-    files/route.ts    GET  → workspace file tree
+    browse/route.ts   GET  → lists local directories for the "open a folder" picker
+    files/route.ts    GET  → workspace file tree (for the active root)
     file/route.ts     GET  → one file's contents
+    agents/chat       POST → streaming passthrough to a custom agent's provider
+    agents/test       POST → custom-agent connection probe
 hooks/
   useAgent.ts         the client-side agent loop (the brain): stream → route → execute → repeat;
                       owns settings, sessions, usage, plan, sub-agents, goal mode
+  useCustomAgents.ts  custom-agent state, persistence, and streaming chat
 lib/
   deepseek.ts         DeepSeek streaming client (reasoning_effort, usage capture, cache-friendly)
   stream-client.ts    shared NDJSON stream reader (main loop + sub-agents)
@@ -61,11 +71,12 @@ lib/
   mcp.ts              minimal Streamable-HTTP MCP client (JSON-RPC, no SDK dependency)
   skills.ts           built-in skills + sub-agent profiles
   storage.ts          localStorage persistence (settings, memory, session rollouts)
-  workspace.ts        path-jail helpers (everything stays inside AGENT_WORKSPACE)
+  workspace.ts        path-jail helpers + dynamic root + directory browsing
+  theme.ts            shared theme helper (for routes outside the main hook)
   prompt.ts           deterministic system-prompt builder (stable prefix for cache hits)
-  types.ts            shared contracts (wire format, UI model, usage, settings, sessions)
+  types.ts            shared contracts (wire format, UI model, usage, settings, sessions, agents)
 components/           presentational UI (chat, tools, files, layout, controls, settings,
-                      sessions, usage, brand)
+                      sessions, usage, agents, brand)
 ```
 
 The server is **stateless**: `/api/chat` returns a single assistant turn and never
@@ -92,8 +103,10 @@ DEEPSEEK_DEFAULT_MODEL=deepseek-chat
 AGENT_WORKSPACE=/abs/path/to/workspace        # the sandbox the agent operates in
 ```
 
-The agent can only touch files inside `AGENT_WORKSPACE`; `..` / absolute-path
-escapes are blocked. A small demo project is seeded in `workspace/`.
+`AGENT_WORKSPACE` is the **default** sandbox root (a demo project is seeded in
+`workspace/`). Because the app runs locally, you can also **Open a folder** from the
+sidebar to point the agent at any directory on your machine — that folder then becomes
+the jail. Within the active root, `..` / absolute-path escapes are always blocked.
 
 ## Notes
 

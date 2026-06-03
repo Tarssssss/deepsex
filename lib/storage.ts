@@ -10,6 +10,8 @@
  */
 import {
   AgentSettings,
+  CustomAgent,
+  CustomAgentMessage,
   DEFAULT_SETTINGS,
   SessionMeta,
   StoredSession,
@@ -18,6 +20,8 @@ import {
 const SETTINGS_KEY = "ds-settings";
 const SESSION_INDEX_KEY = "ds-sessions";
 const SESSION_PREFIX = "ds-session:";
+const CUSTOM_AGENTS_KEY = "ds-custom-agents";
+const CUSTOM_CONVOS_KEY = "ds-custom-agent-convos";
 
 function canUse(): boolean {
   return typeof window !== "undefined" && !!window.localStorage;
@@ -123,4 +127,48 @@ export function deriveTitle(text: string): string {
   const clean = text.trim().replace(/\s+/g, " ");
   if (!clean) return "Untitled session";
   return clean.length > 48 ? clean.slice(0, 47) + "…" : clean;
+}
+
+/* -------------------------- custom agents -------------------------- */
+
+export function loadCustomAgents(): CustomAgent[] {
+  if (!canUse()) return [];
+  try {
+    const raw = localStorage.getItem(CUSTOM_AGENTS_KEY);
+    const list = raw ? (JSON.parse(raw) as CustomAgent[]) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomAgents(agents: CustomAgent[]): void {
+  if (!canUse()) return;
+  try {
+    localStorage.setItem(CUSTOM_AGENTS_KEY, JSON.stringify(agents));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadCustomConvos(): Record<string, CustomAgentMessage[]> {
+  if (!canUse()) return {};
+  try {
+    const raw = localStorage.getItem(CUSTOM_CONVOS_KEY);
+    const obj = raw ? (JSON.parse(raw) as Record<string, CustomAgentMessage[]>) : {};
+    return obj && typeof obj === "object" ? obj : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveCustomConvos(
+  convos: Record<string, CustomAgentMessage[]>
+): void {
+  if (!canUse()) return;
+  try {
+    localStorage.setItem(CUSTOM_CONVOS_KEY, JSON.stringify(convos));
+  } catch {
+    /* ignore */
+  }
 }

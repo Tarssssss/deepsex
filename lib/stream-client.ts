@@ -18,9 +18,10 @@ export interface StreamAggregate {
 export async function streamChat(
   body: Record<string, unknown>,
   signal: AbortSignal,
-  onEvent?: (evt: StreamEvent, agg: StreamAggregate) => void
+  onEvent?: (evt: StreamEvent, agg: StreamAggregate) => void,
+  url = "/api/chat"
 ): Promise<StreamAggregate> {
-  const res = await fetch("/api/chat", {
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

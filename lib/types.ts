@@ -427,6 +427,11 @@ export interface AgentSettings {
   customSkills: Skill[];
   disabledSkills: string[];
   mcpServers: McpServerConfig[];
+  /**
+   * Active workspace root — the local folder the user opened (opencode-style).
+   * Empty string means use the server's default AGENT_WORKSPACE.
+   */
+  workspaceRoot: string;
 }
 
 export const DEFAULT_SETTINGS: AgentSettings = {
@@ -441,7 +446,25 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   customSkills: [],
   disabledSkills: [],
   mcpServers: [],
+  workspaceRoot: "",
 };
+
+/* ------------------------------------------------------------------ */
+/* Folder browsing (the "open a folder" picker)                        */
+/* ------------------------------------------------------------------ */
+
+export interface BrowseDirEntry {
+  name: string;
+  path: string;
+}
+
+export interface BrowseResponse {
+  path: string;
+  parent: string | null;
+  dirs: BrowseDirEntry[];
+  home: string;
+  defaultRoot: string;
+}
 
 /* ------------------------------------------------------------------ */
 /* Sessions (Codex-style rollout persistence)                          */
@@ -462,6 +485,49 @@ export interface StoredSession extends SessionMeta {
   messages: UIMessage[];
   /** Wire-format conversation replayed to the model on resume. */
   wire: ChatMessage[];
+}
+
+/* ------------------------------------------------------------------ */
+/* Custom agents (ccswitch-style provider/persona profiles)            */
+/* ------------------------------------------------------------------ */
+
+/** Accent swatches for agent avatars (all readable with white text). */
+export const ACCENT_SWATCHES = [
+  "#4d6bfe", // brand blue
+  "#2ea043", // green
+  "#d97706", // amber
+  "#e5484d", // red
+  "#8b5cf6", // violet
+  "#0ea5e9", // sky
+  "#ec4899", // pink
+  "#14b8a6", // teal
+];
+
+/**
+ * A user-configured agent: its own OpenAI-compatible provider, model, key, and
+ * system prompt. Lives entirely client-side; the API key is sent only to the
+ * provider (via a stateless server passthrough), never persisted server-side.
+ */
+export interface CustomAgent {
+  id: string;
+  name: string;
+  description: string;
+  accent: string;
+  /** OpenAI-compatible base URL, e.g. https://api.openai.com/v1 */
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  systemPrompt: string;
+  temperature: number;
+  createdAt: number;
+}
+
+export interface CustomAgentMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  streaming?: boolean;
+  error?: boolean;
 }
 
 /* ------------------------------------------------------------------ */

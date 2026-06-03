@@ -40,7 +40,12 @@ memory, sessions) lives in the browser (`lib/storage.ts`).
   the client's config and streams ONE assistant turn as NDJSON. Does **not** execute tools.
 - `app/api/tool/route.ts` — POST. Executes ONE server/MCP tool (`executeTool`) in the sandbox.
 - `app/api/mcp/route.ts` — POST. Discovers tools from the client's configured MCP servers.
-- `app/api/files` + `app/api/file` — workspace tree + single-file read (for the UI).
+- `app/api/browse/route.ts` — GET. Lists local directories for the "open a folder" picker.
+- `app/api/files` + `app/api/file` — workspace tree + single-file read (for the active root).
+- `app/agents/page.tsx` + `app/api/agents/{chat,test}` — the separate **Custom Agents** hub
+  (ccswitch-style). `useCustomAgents` holds the agent profiles + per-agent conversations
+  (localStorage); `agents/chat` is a stateless streaming passthrough to each agent's own
+  OpenAI-compatible provider (API key used only for the upstream call, never persisted).
 - `lib/deepseek.ts` — DeepSeek streaming client. Assembles fragmented tool-call deltas by
   index, forwards `reasoning_effort`, sets temperature 0 + `parallel_tool_calls`, and
   captures the final `usage` chunk → `{type:"usage"}` StreamEvent.
@@ -53,7 +58,9 @@ memory, sessions) lives in the browser (`lib/storage.ts`).
   `mcp__<server>__<tool>`.
 - `lib/skills.ts` — built-in skills (progressive disclosure) + sub-agent profiles.
 - `lib/storage.ts` — localStorage for settings/memory + Codex-style session rollouts.
-- `lib/workspace.ts` — the path jail. Everything resolves through here.
+- `lib/workspace.ts` — the path jail + the **dynamic root** (the folder the user opened,
+  sent per request and validated) + directory browsing for the picker. Tools resolve every
+  path against the active root; `..`/absolute escapes are blocked relative to it.
 - `lib/types.ts` — the **single source of truth** for shared contracts (wire format, UI
   model, streaming protocol, models+pricing, approval/effort modes, usage, settings,
   sessions, plan/question/sub-agent/skill/MCP shapes). Both server and client import it.

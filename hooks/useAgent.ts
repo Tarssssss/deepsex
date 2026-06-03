@@ -313,6 +313,7 @@ export function useAgent() {
       })),
       goalMode: s.goalMode,
       mcpTools: mcpToolsRef.current,
+      workspaceRoot: s.workspaceRoot,
     };
   }
 
@@ -387,6 +388,7 @@ export function useAgent() {
           name,
           args,
           mcpServers: settingsRef.current.mcpServers,
+          root: settingsRef.current.workspaceRoot,
         }),
       });
       const result = (await res.json()) as ToolResult;
@@ -442,6 +444,7 @@ export function useAgent() {
             reasoningEffort: settingsRef.current.reasoningEffort,
             systemPromptOverride: profile.prompt,
             coreToolsOnly: true,
+            workspaceRoot: settingsRef.current.workspaceRoot,
           },
           controller.signal
         );
@@ -467,6 +470,7 @@ export function useAgent() {
                 name: cname,
                 args: cargs,
                 mcpServers: settingsRef.current.mcpServers,
+                root: settingsRef.current.workspaceRoot,
               }),
             })
           ).json()) as ToolResult;

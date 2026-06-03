@@ -16,6 +16,7 @@ import { isMcpTool } from "@/lib/types";
 import { callMcpTool } from "@/lib/mcp";
 import {
   ensureWorkspace,
+  resolveActiveRoot,
   resolveInWorkspace,
   toWorkspaceRelative,
   IGNORED_ENTRIES,
@@ -305,6 +306,8 @@ export const CLIENT_TOOL_SCHEMAS: ToolSchema[] = [
 export interface ToolContext {
   /** MCP servers configured by the client, for routing mcp__ tool calls. */
   mcpServers?: McpServerConfig[];
+  /** The active workspace root (the folder the user opened). */
+  root?: string;
 }
 
 export async function executeTool(
@@ -317,17 +320,18 @@ export async function executeTool(
     if (isMcpTool(name)) {
       return await callMcpTool(ctx.mcpServers ?? [], name, args);
     }
+    const root = await resolveActiveRoot(ctx.root);
     switch (name) {
       case "read_file":
-        return await readFileTool(args);
+        return await readFileTool(args, root);
       case "write_file":
-        return await writeFileTool(args);
+        return await writeFileTool(args, root);
       case "edit_file":
-        return await editFileTool(args);
+        return await editFileTool(args, root);
       case "list_files":
-        return await listFilesTool(args);
+        return await listFilesTool(args, root);
       case "run_command":
-        return await runCommandTool(args);
+        return await runCommandTool(args, root);
       default:
         return { ok: false, output: `Error: unknown tool "${name}".` };
     }
@@ -340,11 +344,14 @@ export async function executeTool(
 /* Individual tools                                                    */
 /* ------------------------------------------------------------------ */
 
-async function readFileTool(args: Record<string, unknown>): Promise<ToolResult> {
-  await ensureWorkspace();
+async function readFileTool(
+  args: Record<string, unknown>,
+  root: string
+): Promise<ToolResult> {
+  await ensureWorkspace(root);
   const rel = requireString(args, "path");
-  const abs = resolveInWorkspace(rel);
-  const displayPath = toWorkspaceRelative(abs);
+  const abs = resolveInWorkspace(rel, root);
+  const displayPath = toWorkspaceRelative(abs, root);
 
   const stat = await fs.stat(abs);
   if (stat.isDirectory()) {
@@ -372,12 +379,15 @@ async function readFileTool(args: Record<string, unknown>): Promise<ToolResult> 
   };
 }
 
-async function writeFileTool(args: Record<string, unknown>): Promise<ToolResult> {
-  await ensureWorkspace();
+async function writeFileTool(
+  args: Record<string, unknown>,
+  root: string
+): Promise<ToolResult> {
+  await ensureWorkspace(root);
   const rel = requireString(args, "path");
   const content = requireString(args, "content");
-  const abs = resolveInWorkspace(rel);
-  const displayPath = toWorkspaceRelative(abs);
+  const abs = resolveInWorkspace(rel, root);
+  const displayPath = toWorkspaceRelative(abs, root);
 
   // Read prior contents (if any) so we can produce a meaningful diff.
   let before = "";
@@ -415,13 +425,16 @@ async function writeFileTool(args: Record<string, unknown>): Promise<ToolResult>
   };
 }
 
-async function editFileTool(args: Record<string, unknown>): Promise<ToolResult> {
-  await ensureWorkspace();
+async function editFileTool(
+  args: Record<string, unknown>,
+  root: string
+): Promise<ToolResult> {
+  await ensureWorkspace(root);
   const rel = requireString(args, "path");
   const oldString = requireString(args, "old_string");
   const newString = requireString(args, "new_string");
-  const abs = resolveInWorkspace(rel);
-  const displayPath = toWorkspaceRelative(abs);
+  const abs = resolveInWorkspace(rel, root);
+  const displayPath = toWorkspaceRelative(abs, root);
 
   let before: string;
   try {
@@ -479,11 +492,14 @@ async function editFileTool(args: Record<string, unknown>): Promise<ToolResult> 
   };
 }
 
-async function listFilesTool(args: Record<string, unknown>): Promise<ToolResult> {
-  const root = await ensureWorkspace();
+async function listFilesTool(
+  args: Record<string, unknown>,
+  root: string
+): Promise<ToolResult> {
+  await ensureWorkspace(root);
   const rel = typeof args.path === "string" && args.path ? args.path : ".";
-  const abs = resolveInWorkspace(rel);
-  const displayPath = toWorkspaceRelative(abs) || ".";
+  const abs = resolveInWorkspace(rel, root);
+  const displayPath = toWorkspaceRelative(abs, root) || ".";
 
   let baseStat;
   try {
@@ -546,8 +562,11 @@ async function listFilesTool(args: Record<string, unknown>): Promise<ToolResult>
   };
 }
 
-async function runCommandTool(args: Record<string, unknown>): Promise<ToolResult> {
-  const cwd = await ensureWorkspace();
+async function runCommandTool(
+  args: Record<string, unknown>,
+  root: string
+): Promise<ToolResult> {
+  const cwd = await ensureWorkspace(root);
   const command = requireString(args, "command");
 
   try {

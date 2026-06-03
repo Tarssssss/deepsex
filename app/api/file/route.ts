@@ -5,7 +5,7 @@
  * the workspace jail so paths cannot escape the sandbox.
  */
 import fs from "node:fs/promises";
-import { resolveInWorkspace } from "@/lib/workspace";
+import { resolveActiveRoot, resolveInWorkspace } from "@/lib/workspace";
 
 export const runtime = "nodejs";
 
@@ -21,7 +21,8 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   try {
-    const abs = resolveInWorkspace(rel);
+    const root = await resolveActiveRoot(url.searchParams.get("root"));
+    const abs = resolveInWorkspace(rel, root);
     const stat = await fs.stat(abs);
     if (stat.isDirectory()) {
       return Response.json({ error: "not found" }, { status: 404 });

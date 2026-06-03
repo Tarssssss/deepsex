@@ -16,6 +16,8 @@ interface ToolRequestBody {
   args: Record<string, unknown>;
   /** MCP server config (for routing mcp__ tool calls). */
   mcpServers?: McpServerConfig[];
+  /** Active workspace root (the folder the user opened). */
+  root?: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -34,6 +36,7 @@ export async function POST(request: Request): Promise<Response> {
       body.args && typeof body.args === "object" ? body.args : {};
     const result = await executeTool(body.name, args, {
       mcpServers: body.mcpServers,
+      root: body.root,
     });
     return Response.json(result);
   } catch (err) {

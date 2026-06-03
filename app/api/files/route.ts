@@ -8,14 +8,20 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { FileNode } from "@/lib/types";
-import { ensureWorkspace, workspaceRoot, IGNORED_ENTRIES } from "@/lib/workspace";
+import {
+  ensureWorkspace,
+  resolveActiveRoot,
+  IGNORED_ENTRIES,
+} from "@/lib/workspace";
 
 export const runtime = "nodejs";
 
-export async function GET(): Promise<Response> {
-  const root = await ensureWorkspace();
+export async function GET(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const root = await resolveActiveRoot(url.searchParams.get("root"));
+  await ensureWorkspace(root);
   const tree = await buildTree(root, root);
-  return Response.json({ root: workspaceRoot(), tree });
+  return Response.json({ root, tree });
 }
 
 async function buildTree(dir: string, root: string): Promise<FileNode[]> {

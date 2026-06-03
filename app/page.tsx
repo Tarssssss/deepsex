@@ -19,6 +19,9 @@ import { ThemeToggle } from "@/components/controls/ThemeToggle";
 import { PlanView } from "@/components/tools/PlanView";
 import { UsagePanel } from "@/components/usage/UsagePanel";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+import { FolderPicker } from "@/components/files/FolderPicker";
+import Link from "next/link";
+import { Bot } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   idle: "Ready",
@@ -71,17 +74,21 @@ export default function Home() {
   const [fileLoading, setFileLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showUsage, setShowUsage] = useState(false);
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+
+  const activeRoot = settings.workspaceRoot;
 
   const loadTree = useCallback(async () => {
     try {
-      const r = await fetch("/api/files");
+      const q = activeRoot ? `?root=${encodeURIComponent(activeRoot)}` : "";
+      const r = await fetch(`/api/files${q}`);
       const d = await r.json();
       setTree(d.tree || []);
       setRoot(d.root || "");
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [activeRoot]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -97,7 +104,8 @@ export default function Home() {
     let cancelled = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFileLoading(true);
-    fetch(`/api/file?path=${encodeURIComponent(selectedPath)}`)
+    const rootQ = activeRoot ? `&root=${encodeURIComponent(activeRoot)}` : "";
+    fetch(`/api/file?path=${encodeURIComponent(selectedPath)}${rootQ}`)
       .then((r) => r.json())
       .then((d) => {
         if (!cancelled) setFileContent(d.content ?? d.error ?? "");
@@ -111,7 +119,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [selectedPath, workspaceVersion]);
+  }, [selectedPath, workspaceVersion, activeRoot]);
 
   const hasMessages = messages.length > 0;
 
@@ -133,6 +141,14 @@ export default function Home() {
             >
               <Target size={16} />
             </button>
+            <Link
+              href="/agents"
+              className="ds-btn ds-btn-ghost ds-focus !p-2"
+              title="Custom Agents"
+              aria-label="Custom Agents"
+            >
+              <Bot size={16} />
+            </Link>
             <button
               className="ds-btn ds-btn-ghost ds-focus !p-2"
               onClick={() => setShowSettings(true)}
@@ -165,6 +181,7 @@ export default function Home() {
           selectedPath={selectedPath}
           onSelect={(p) => setSelectedPath(p)}
           onRefresh={loadTree}
+          onOpenFolder={() => setShowFolderPicker(true)}
           sessions={sessions}
           currentSessionId={currentSessionId}
           onSelectSession={loadSessionById}
@@ -255,6 +272,17 @@ export default function Home() {
       )}
       {showUsage && (
         <UsagePanel usage={usage} model={model} onClose={() => setShowUsage(false)} />
+      )}
+      {showFolderPicker && (
+        <FolderPicker
+          current={root}
+          onClose={() => setShowFolderPicker(false)}
+          onOpen={(path) => {
+            updateSettings({ workspaceRoot: path });
+            setShowFolderPicker(false);
+            setSelectedPath(null);
+          }}
+        />
       )}
     </div>
   );

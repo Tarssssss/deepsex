@@ -20,7 +20,7 @@ import { MODELS } from "@/lib/types";
 import { streamDeepSeek } from "@/lib/deepseek";
 import { TOOL_SCHEMAS, CLIENT_TOOL_SCHEMAS, type ToolSchema } from "@/lib/tools";
 import { buildSystemPrompt, type SkillRef, type AgentRef } from "@/lib/prompt";
-import { workspaceRoot } from "@/lib/workspace";
+import { resolveActiveRoot } from "@/lib/workspace";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,6 +42,8 @@ interface ChatRequestBody {
    * spawn further sub-agents.
    */
   coreToolsOnly?: boolean;
+  /** Active workspace root (the folder the user opened) — used as the prompt cwd. */
+  workspaceRoot?: string;
 }
 
 function mcpToToolSchema(tools: McpToolInfo[] = []): ToolSchema[] {
@@ -71,9 +73,10 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const modelInfo = MODELS.find((m) => m.id === body.model);
+  const activeRoot = await resolveActiveRoot(body.workspaceRoot);
 
   const system = buildSystemPrompt({
-    cwd: workspaceRoot(),
+    cwd: activeRoot,
     reasoningEffort: body.reasoningEffort,
     memory: body.memory,
     skills: body.skills,

@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, FolderOpen } from "lucide-react";
 import { FileTree } from "@/components/files/FileTree";
 import { SessionList } from "@/components/sessions/SessionList";
 import type { FileNode, SessionMeta } from "@/lib/types";
@@ -10,6 +10,7 @@ interface SidebarProps {
   selectedPath: string | null;
   onSelect: (p: string) => void;
   onRefresh?: () => void;
+  onOpenFolder?: () => void;
   root?: string;
   sessions: SessionMeta[];
   currentSessionId: string | null;
@@ -30,6 +31,7 @@ export function Sidebar({
   selectedPath,
   onSelect,
   onRefresh,
+  onOpenFolder,
   root,
   sessions,
   currentSessionId,
@@ -57,17 +59,30 @@ export function Sidebar({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-faint">
             Workspace
           </span>
-          {onRefresh ? (
-            <button
-              type="button"
-              onClick={onRefresh}
-              className="ds-btn ds-btn-ghost ds-focus h-7 w-7 p-0"
-              aria-label="Refresh file tree"
-              title="Refresh files"
-            >
-              <RefreshCw size={14} className="text-muted" aria-hidden="true" />
-            </button>
-          ) : null}
+          <div className="flex items-center gap-0.5">
+            {onOpenFolder ? (
+              <button
+                type="button"
+                onClick={onOpenFolder}
+                className="ds-btn ds-btn-ghost ds-focus h-7 w-7 p-0"
+                aria-label="Open a folder"
+                title="Open a folder"
+              >
+                <FolderOpen size={14} className="text-muted" aria-hidden="true" />
+              </button>
+            ) : null}
+            {onRefresh ? (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="ds-btn ds-btn-ghost ds-focus h-7 w-7 p-0"
+                aria-label="Refresh file tree"
+                title="Refresh files"
+              >
+                <RefreshCw size={14} className="text-muted" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
         </div>
         {rootName ? (
           <p className="mt-0.5 truncate text-xs text-faint" title={root}>
