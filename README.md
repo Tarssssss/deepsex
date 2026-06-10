@@ -94,13 +94,20 @@ npm run dev
 # open http://localhost:3000
 ```
 
-### Configuration (`.env.local`)
+Then just **paste your DeepSeek API key** when prompted on the home screen (or in
+Settings → DeepSeek API key). It's stored locally in your browser — no `.env` editing
+needed. A demo project is already seeded in `workspace/`, so you can start chatting
+immediately.
+
+### Optional configuration (`.env.local`)
+
+Prefer not to enter the key in the UI? Set it in the environment instead:
 
 ```bash
-DEEPSEEK_API_KEY=sk-...                       # your DeepSeek API key
+DEEPSEEK_API_KEY=sk-...                       # used when no key is set in the UI
 DEEPSEEK_BASE_URL=https://api.deepseek.com    # OpenAI-compatible endpoint
 DEEPSEEK_DEFAULT_MODEL=deepseek-chat
-AGENT_WORKSPACE=/abs/path/to/workspace        # the sandbox the agent operates in
+AGENT_WORKSPACE=/abs/path/to/workspace        # default sandbox (you can also "Open a folder" in-app)
 ```
 
 `AGENT_WORKSPACE` is the **default** sandbox root (a demo project is seeded in

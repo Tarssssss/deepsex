@@ -32,6 +32,8 @@ export interface StreamDeepSeekOptions {
   reasoningEffort?: ReasoningEffort;
   /** Whether this model streams a separate reasoning_content channel. */
   reasoning?: boolean;
+  /** API key from the client (UI). Falls back to DEEPSEEK_API_KEY env var. */
+  apiKey?: string;
   /** Optional abort signal to cancel the upstream request. */
   signal?: AbortSignal;
 }
@@ -59,12 +61,13 @@ function baseUrl(): string {
 export async function* streamDeepSeek(
   opts: StreamDeepSeekOptions
 ): AsyncGenerator<StreamEvent> {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  // Prefer the key the user pasted in the UI; fall back to the server env var.
+  const apiKey = opts.apiKey?.trim() || process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
     yield {
       type: "error",
       message:
-        "DEEPSEEK_API_KEY is not set. Add it to your environment to call the DeepSeek API.",
+        "No DeepSeek API key. Open Settings and paste your key (or set DEEPSEEK_API_KEY in the environment).",
     };
     return;
   }

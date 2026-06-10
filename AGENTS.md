@@ -9,11 +9,13 @@ with tool calling. See `README.md` for the user-facing overview.
 
 ```bash
 npm install
-cp .env.example .env.local   # then set DEEPSEEK_API_KEY
-npm run dev                  # http://localhost:3000
+npm run dev                  # http://localhost:3000 — paste your key in the UI
 ```
 
-Required env (see `.env.example`): `DEEPSEEK_API_KEY`. Optional: `DEEPSEEK_BASE_URL`
+The DeepSeek API key can be entered in-app (Settings → DeepSeek API key, stored in
+localStorage and sent per request) OR via env. `/api/status` reports whether an env key
+exists so the home screen only nags for a key when neither is set. Env (see
+`.env.example`): `DEEPSEEK_API_KEY` (fallback when the UI key is empty). Optional: `DEEPSEEK_BASE_URL`
 (default `https://api.deepseek.com`), `DEEPSEEK_DEFAULT_MODEL` (default `deepseek-chat`),
 `AGENT_WORKSPACE` (default `./workspace`). The agent can only touch files inside
 `AGENT_WORKSPACE`; `..`/absolute-path escapes are blocked.

@@ -75,6 +75,23 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [showUsage, setShowUsage] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const [hasEnvKey, setHasEnvKey] = useState(true);
+
+  // First-run onboarding: only prompt for a key if neither the env nor the UI has one.
+  const needsKey = !hasEnvKey && !settings.deepseekApiKey;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/status")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setHasEnvKey(!!d.hasEnvKey);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const activeRoot = settings.workspaceRoot;
 
@@ -209,7 +226,11 @@ export default function Home() {
             />
           ) : (
             <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
-              <EmptyState onPick={(p) => send(p)} />
+              <EmptyState
+                onPick={(p) => send(p)}
+                needsKey={needsKey}
+                onConfigureKey={() => setShowSettings(true)}
+              />
             </div>
           )}
 

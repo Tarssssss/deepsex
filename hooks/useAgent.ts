@@ -314,6 +314,7 @@ export function useAgent() {
       goalMode: s.goalMode,
       mcpTools: mcpToolsRef.current,
       workspaceRoot: s.workspaceRoot,
+      apiKey: s.deepseekApiKey,
     };
   }
 
@@ -445,6 +446,7 @@ export function useAgent() {
             systemPromptOverride: profile.prompt,
             coreToolsOnly: true,
             workspaceRoot: settingsRef.current.workspaceRoot,
+            apiKey: settingsRef.current.deepseekApiKey,
           },
           controller.signal
         );

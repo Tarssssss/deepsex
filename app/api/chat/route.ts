@@ -44,6 +44,8 @@ interface ChatRequestBody {
   coreToolsOnly?: boolean;
   /** Active workspace root (the folder the user opened) — used as the prompt cwd. */
   workspaceRoot?: string;
+  /** DeepSeek API key from the UI (falls back to the env var). */
+  apiKey?: string;
 }
 
 function mcpToToolSchema(tools: McpToolInfo[] = []): ToolSchema[] {
@@ -113,6 +115,7 @@ export async function POST(request: Request): Promise<Response> {
           tools,
           reasoningEffort: body.reasoningEffort,
           reasoning: modelInfo?.reasoning,
+          apiKey: body.apiKey,
           signal: request.signal,
         })) {
           emit(event);

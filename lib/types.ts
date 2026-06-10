@@ -413,6 +413,12 @@ export type ThemePref = "light" | "dark" | "system";
 
 export interface AgentSettings {
   theme: ThemePref;
+  /**
+   * DeepSeek API key entered in the UI (stored locally in the browser, sent
+   * per request). Lets users start without editing .env — falls back to the
+   * server's DEEPSEEK_API_KEY env var when empty.
+   */
+  deepseekApiKey: string;
   model: DeepSeekModel;
   approvalMode: ApprovalMode;
   reasoningEffort: ReasoningEffort;
@@ -436,6 +442,7 @@ export interface AgentSettings {
 
 export const DEFAULT_SETTINGS: AgentSettings = {
   theme: "system",
+  deepseekApiKey: "",
   model: "deepseek-chat",
   approvalMode: "auto-edit",
   reasoningEffort: "medium",

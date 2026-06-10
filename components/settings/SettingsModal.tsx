@@ -12,6 +12,8 @@ import {
   Target,
   Plus,
   Trash2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   REASONING_EFFORTS,
@@ -131,8 +133,32 @@ function GeneralTab({
   update: (p: Partial<AgentSettings>) => void;
 }) {
   const themes: ThemePref[] = ["light", "dark", "system"];
+  const [showKey, setShowKey] = useState(false);
   return (
     <div>
+      <Field
+        label="DeepSeek API key"
+        hint="Stored locally in your browser. Lets you start without editing .env — leave empty to use the server's DEEPSEEK_API_KEY."
+      >
+        <div className="relative">
+          <input
+            type={showKey ? "text" : "password"}
+            value={settings.deepseekApiKey}
+            onChange={(e) => update({ deepseekApiKey: e.target.value })}
+            placeholder="sk-…"
+            className="ds-focus w-full rounded-[8px] border border-border bg-surface px-3 py-2 pr-10 font-mono text-xs text-text placeholder:text-faint focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setShowKey((v) => !v)}
+            className="ds-btn ds-btn-ghost ds-focus !absolute !right-1 !top-1/2 !-translate-y-1/2 !p-1.5"
+            aria-label={showKey ? "Hide key" : "Show key"}
+          >
+            {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+          </button>
+        </div>
+      </Field>
+
       <Field label="Theme">
         <div className="flex gap-1.5">
           {themes.map((t) => (
